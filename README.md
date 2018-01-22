@@ -4,7 +4,8 @@
 [Quarian](http://masseffect.wikia.com/wiki/Quarian) is a controller meant to
 shepherd Geth instances that are not performing properly, and alert/report on
 problems with a Geth instance. If Geth is not running properly, it will
-restart Geth with a command of your choosing.
+restart Geth with a command of your choosing. Quarian is currently being tested
+on my Geth nodes for [EGS Singapore](//gasstation-legacy.etheria.io/).
 
 Features:
 
@@ -13,6 +14,7 @@ Features:
   side to restart geth
 * **Easy to read logs**: Nice easy UTF-8 + color logging output to stdout
 * **Multiple canonical sources for chain tip**: Supports Etherscan, Etherchain, and your own geth nodes
+* **Modular checks**: Checks are easy to write classes. Turn on and off specific checks.
 
 
 ### Configuration
@@ -27,6 +29,11 @@ for settings, as well as:
 
 in that order. The `settings.conf` file contains configuration information
 for Quarian.
+
+You will want to decide what checks to use for your system, and then add the
+check modules you want Quarian to load as the `checklist` property, as a
+comma-delimited string (e.g. `cron,chaintip`). If you want to write your own
+checks for Quarian, see the README.md inside the `quarian/checks` folder.
 
 
 ### Installation & Use
