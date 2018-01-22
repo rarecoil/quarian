@@ -4,9 +4,13 @@
     Quarian class
 """
 
+import glob
+import importlib
 import os
 import shlex
 import subprocess
+import sys
+import re
 import time
 import urllib
 
@@ -14,7 +18,7 @@ import requests
 import web3
 
 from configparser import ConfigParser
-from common.output import Output
+from .output import Output
 
 class Quarian(object):
     """Quarian primary class. Expects to be run locally with
@@ -32,70 +36,39 @@ class Quarian(object):
     restart_command = "supervisorctl restart geth"
     restart_command_type = "shell"
     nodelist = ["http://localhost:8545/"]
+    checklist = ['cron']
     allow_trailing_syncing = 500
     allow_trailing_stalled = 50
     check_every_seconds = 8
     ignore_firstrun_node = True
     get_highest_from = 'etherscan'
 
-    last_block_height_check = None
-    check_block_height_every_sec = 60
-    allow_lag_of = 50 # allow geth to trail behind this many blocks
+    check_options = {}
+    global_options = {}
 
 
     def __init__(self, args):
         self.console = Output()
-        self._load_settings(args.settings_file)
         if args.loglevel:
             self.loglevel = args.loglevel
-
         self.console.set_loglevel(self.loglevel)
+
+        self._load_settings(args.settings_file)
+        self._load_checks()
+
         self.console.info("Quarian started.")
         self.web3 = web3.Web3(web3.HTTPProvider(self.reference_node))
 
 
-    def check(self, uri, highest=None):
+    def check(self, uri):
         """Check on Geth, and restart."""
-        self.console.debug("Checking node... (%s)" % uri)
-        try:
-            if highest is None:
-                actual_highest, provider = self.get_highest_known_block()
-            current_block, syncing  = self._get_current_highest_block_geth(uri, True)
-        except requests.exceptions.ConnectionError:
-            self.console.error("Connection Failed, attempting restart (%s)" % uri)
-            self._restart_geth(uri)
-            return
-        except requests.exceptions.Timeout:
-            self.console.error("Connection Timeout, attempting restart (%s)" % uri)
-            self._restart_geth(uri)
-            return
-        self.console.debug("Block reported: %d (%s)" % (current_block, uri))
-
-        restart_trigger = False
-        if (actual_highest < current_block):
-            # Why are our canonical sources behind this instance?
-            self.console.warn("Canonical source %s is behind this node." % provider)
-        elif (actual_highest > current_block):
-            # calculate delta and handle messaging
-            delta = actual_highest - current_block
-            if syncing is True:
-                # node is still syncing.
-                if delta >= self.allow_trailing_syncing:
-                    if self.ignore_firstrun_node and current_block == 0:
-                        self.console.info("Node trailing (Δ %d), ignored because of firstrun (%s)" % (delta, uri))
-                        restart_trigger = True
-                    else:
-                        self.console.warn("✘  Node (syncing) trailing (Δ %d), attempting restart (%s)" % (delta, uri))
-                        self._restart_geth(uri)
-                        restart_trigger = True
+        for check in self.checklist:
+            check.set_geth_instance(uri)
+            res = check.check(uri)
+            if res == True:
+                self._restart_geth(uri)
             else:
-                if delta >= self.allow_trailing_stalled:
-                     self.console.warn("✘  Node (stalled) trailing (Δ %d), attempting restart (%s)" % (delta, uri))
-                     self._restart_geth(uri)
-                     restart_trigger = True
-
-        if restart_trigger is False:
-            self.console.debug("✅  Node within spec (Δ %d) (%s)" % ((actual_highest - current_block), uri))
+                continue
 
 
     def check_every(self, sec=None):
@@ -146,15 +119,6 @@ class Quarian(object):
         return (self.web3.eth.syncing is not False)
 
 
-    def _get_current_highest_block_geth(self, uri, reportSyncing=False):
-        """Get the highest block geth is currently at"""
-        webthree = web3.Web3(web3.HTTPProvider(uri))
-        if reportSyncing:
-            syncing = (webthree.eth.syncing is not False)
-            return (webthree.eth.blockNumber, syncing)
-        return webthree.eth.blockNumber
-
-
     def _get_highest_known_block_geth(self):
         """Get the highest block from the local geth, the highest known
         if geth is still syncing. Note that this is likely not going to
@@ -191,7 +155,6 @@ class Quarian(object):
 
     def _get_highest_known_block_etherchain(self):
         """Get the highest block from etherchain.org as nicely as possible"""
-
         uri = 'https://www.etherchain.org/blocks/data?draw=0&start=0&length=0'
         res = requests.get(uri,
             headers = { 'user-agent': self.user_agent },
@@ -245,10 +208,48 @@ class Quarian(object):
                 return False
 
 
+    def _load_checks(self):
+        """Loads checks from the checks directory."""
+        check_class_list = []
+        checks_directory = os.path.realpath(os.path.join(
+                                os.path.dirname(__file__), '..', 'checks'))
+        self.console.debug("Loading checks from directory %s" % checks_directory)
+        for filepath in glob.glob(os.path.join(checks_directory, '*.py')):
+            if os.path.basename(filepath) == 'base.py':
+                self.console.debug("Skipping analysis of base.py")
+            class_re = "class\s+(.*)\([\w_]*[\s,]*CheckBase[\s,]*.*\)"
+            compiled_class_re = re.compile(class_re)
+            with open(filepath, 'r') as f:
+                class_file = f.read().split("\n")
+                for line in class_file:
+                    result = re.match(compiled_class_re, line)
+                    if result is not None:
+                        class_name = result.groups()[0]
+                        self.console.debug("Found class name %s in %s" % (class_name, filepath))
+                        instance = self._instantiate_from_filepath(filepath, class_name)
+                        check_class_list.append(instance)
+        # instantiate class instances
+        self.checklist = check_class_list
+
+
+    def _instantiate_from_filepath(self, filepath, className):
+        """Instantiate a check class from a filepath and className."""
+        check_module = os.path.basename(filepath).replace('.py', '')
+        mod = importlib.import_module("quarian.checks.%s" % check_module)
+        cls = getattr(mod, className)
+        self.console.debug("-> Importing class %s" % str(cls))
+        check_options = {}
+        if not check_module in self.check_options:
+            self.console.warn("No options specified for check %s in file." % check_module)
+        else:
+            check_options = self.check_options[check_module]
+        return cls(self.global_options, check_options, self)
+
+
     def _load_settings(self, settings_file=None):
         """Load settings.conf"""
         candidate_locations = [
-             os.path.realpath(os.path.join(os.path.dirname(__file__), '..', 'settings.conf')),
+             os.path.realpath(os.path.join(os.getcwd(), 'settings.conf')),
             '/etc/quarian/settings.conf',
             '/etc/quarian.conf',
             '/etc/default/quarian.conf',
@@ -258,12 +259,17 @@ class Quarian(object):
         if settings_file is not None:
             candidate_locations = [settings_file]
 
+        location_filepath = None
         for location in candidate_locations:
             if os.path.isfile(location):
                 self.console.info("Using settings file %s" % location)
+                location_filepath = location
+
+        if location_filepath is None:
+            raise FileNotFoundError("Cannot find Quarian configuration file.")
 
         config = ConfigParser()
-        config.read(location)
+        config.read(location_filepath)
 
         whitelisted_settings = [
             'reference_node',
@@ -274,27 +280,36 @@ class Quarian(object):
             'restart_command',
             'restart_command_type',
             'nodelist',
-            'allow_trailing_syncing',
-            'allow_trailing_stalled',
             'get_highest_from',
-            'ignore_firstrun_node'
+            'ignore_firstrun_node',
+            'checklist'
         ]
 
-        if 'quarian' in config.sections():
-            for setting in whitelisted_settings:
-                try:
-                    if setting == 'nodelist':
-                        self.nodelist = config['quarian']['nodelist'].split(',')
-                    elif setting == 'get_highest_from':
-                        potential_list = config['quarian']['get_highest_from'].split(',')
-                        self.get_highest_from = potential_list
-                    elif setting in ['check_every_seconds', 'allow_trailing_syncing', 'allow_trailing_stalled']:
-                        self.__setattr__(setting, int(config['quarian'][setting]))
-                    else:
-                        self.__setattr__(setting, config['quarian'][setting])
-                except KeyError:
-                    self.console.info("Settings file is missing key %s, using default" % setting)
-                    continue
-        else:
-            self.console.warn("Settings file is missing [quarian] section.")
+        if 'quarian' not in config.sections():
+            self.console.error("[quarian] section missing in configuration.")
+
+        for section in config.sections():
+            if section == 'quarian':
+                for setting in whitelisted_settings:
+                    try:
+                        if setting in ['nodelist', 'checklist']:
+                            exploded = config['quarian'][setting].split(',')
+                            self.__setattr__(setting, exploded)
+                            self.global_options[setting] = exploded
+                        elif setting == 'get_highest_from':
+                            potential_list = config['quarian']['get_highest_from'].split(',')
+                            self.get_highest_from = potential_list
+                            self.global_options['get_highest_from'] = self.get_highest_from
+                        elif setting in ['check_every_seconds', 'allow_trailing_syncing', 'allow_trailing_stalled']:
+                            self.__setattr__(setting, int(config['quarian'][setting]))
+                            self.global_options[setting] = int(config['quarian'][setting])
+                        else:
+                            self.__setattr__(setting, config['quarian'][setting])
+                            self.global_options[setting] = config['quarian'][setting]
+                    except KeyError:
+                        self.console.info("Settings file is missing key %s, using default" % setting)
+                        continue
+            elif section.find("quarian:check:") == 0:
+                check_name = section[14:]
+                self.check_options[check_name] = dict(config[section])
 

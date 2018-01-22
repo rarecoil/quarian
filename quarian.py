@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 import argparse
-from common.quarian import Quarian
+from quarian.common.core import Quarian
 
 def main():
     parser = argparse.ArgumentParser(description="Monitors delinquent Geth nodes.")
