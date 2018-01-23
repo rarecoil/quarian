@@ -99,6 +99,7 @@ class CheckChainTip(CheckBase):
         now = time.time()
         if self.last_restart is None:
             self.last_restart = now
+            return True
 
         if self.restart_grace_period_strategy == 'fixed':
             delta = (now - self.last_restart)

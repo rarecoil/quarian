@@ -170,7 +170,6 @@ class Quarian(object):
     def _restart_geth(self, uri):
         """Restarts geth based upon restart_command. returns Boolean."""
         self.console.debug("Restart geth on node (%s)" % uri)
-        return # short circuit for testing other functionality
 
         if self.restart_command_type == 'shell':
             # dont trust this wont expand later, escape it for shell
