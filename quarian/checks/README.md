@@ -2,7 +2,7 @@
 
 In this directory are Quarian's various checks. If you want to write your own
 check for quarian, just dump it in this directory and add it to your config.
-For an example of a simple check, see `cron.py`, which simply triggers whenever
+For an example of a simple check, see `timer.py`, which simply triggers whenever
 a certain amount of time has passed.
 
 Note that all checks need to inherit from the base class `base.py`. Using
@@ -13,3 +13,11 @@ developer console (e.g. `console.info`, `console.warn`).
 
 The `check` method is the most important. It must return a boolean value.
 If it returns `True`, Quarian will attempt to restart the geth node.
+
+### Included checks
+
+* **chaintip**: Will restart Geth if it begins to lag against the last 
+block in the chain. Will check Etherscan or Etherchain for their canonical block
+and use that, or your Geth reference node.
+
+* **timer**: Will restart after a certain amount of time has passed.
