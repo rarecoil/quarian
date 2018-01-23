@@ -23,7 +23,7 @@ class CronCheck(CheckBase):
     def check(self, uri):
         """Returns a Boolean on whether or not Quarian should restart Geth."""
         now = time.time()
-        if (self.last_restart - now) >= self.restart_every_sec:
+        if (now - self.last_restart) >= self.restart_every_sec:
             return True
         else:
             return False
