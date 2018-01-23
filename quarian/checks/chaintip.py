@@ -91,7 +91,7 @@ class CheckChainTip(CheckBase):
 
         if restart_trigger is False:
             self.console.debug("✅  Node within spec (Δ %d) (%s)" % ((actual_highest - current_block), uri))
-        return True
+        return False
 
 
     def _issue_restart(self, blockdelta=None):
