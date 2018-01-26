@@ -36,7 +36,7 @@ class CheckProxy(CheckBase):
             self.console.debug("Not restarting node due to proxycheck, still in delay period.")
             return False
 
-        json_data = '{"jsonrpc":"2.0","method":"eth_blockNumber","params":[],"id":'+int(time.time())+'}'
+        json_data = '{"jsonrpc":"2.0","method":"eth_blockNumber","params":[],"id":'+str(int(time.time()))+'}'
         request_with_cert = False
         if self.tls_client_cert_path is not None:
             if os.path.isfile(self.tls_client_cert_path):
