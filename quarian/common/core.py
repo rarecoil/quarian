@@ -101,6 +101,11 @@ class Quarian(object):
                     if res is not False:
                         highest.append(res)
                         providers.append('etherchain')
+                elif source == 'infura':
+                    res = self._get_highest_known_block_infura()
+                    if res is not False:
+                        highest.append(res)
+                        providers.append('infura')
                 elif source == 'geth':
                     res = self._get_highest_known_block_geth(self.DEFAULTS['geth_location'])
                     highest.append(res)
@@ -169,6 +174,16 @@ class Quarian(object):
                 return False
         return False
 
+    def _get_highest_known_block_infura(self):
+        """Get the highest known block from Consensys Infura"""
+        infura_uri = "https://mainnet.infura.io/%s" % (self.infura_api_key)
+        try:
+            infura_web3 = web3.Web3(web3.HTTPProvider(infura_uri))
+            number = infura_web3.eth.blockNumber
+            return int(number)
+        except:
+            self.console.error("Could not retrieve from Infura.")
+        return False
 
     def _restart_geth(self, uri):
         """Restarts geth based upon restart_command. returns Boolean."""
@@ -284,7 +299,8 @@ class Quarian(object):
             'nodelist',
             'get_highest_from',
             'ignore_firstrun_node',
-            'checklist'
+            'checklist',
+            'infura_api_key'
         ]
 
         if 'quarian' not in config.sections():
