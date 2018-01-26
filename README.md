@@ -13,7 +13,7 @@ Features:
   HTTP requests to servers to cause geth restarts, if you have tooling on that
   side to restart geth
 * **Easy to read logs**: Nice easy UTF-8 + color logging output to stdout
-* **Multiple canonical sources for chain tip**: Supports Etherscan, Etherchain, and your own geth nodes
+* **Multiple canonical sources for chain tip**: Supports Etherscan, Etherchain, Infura, and your own geth nodes
 * **Modular checks**: Checks are easy to write classes. Turn on and off specific checks.
 
 
