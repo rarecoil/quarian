@@ -32,7 +32,7 @@ class CheckProxy(CheckBase):
     def check(self, uri):
         """Returns a Boolean on whether or not Quarian should restart Geth."""
         now = time.time()
-        if (now - self.last_restart) <= restart_delay:
+        if (now - self.last_restart) <= self.restart_delay:
             self.console.debug("Not restarting node due to proxycheck, still in delay period.")
             return False
 
