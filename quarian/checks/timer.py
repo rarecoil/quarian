@@ -6,7 +6,7 @@
 import time
 from .base import CheckBase
 
-class CheckCron(CheckBase):
+class CheckTimer(CheckBase):
 
     web3_reference = None
     web3_geth = None
