@@ -109,6 +109,9 @@ class Quarian(object):
                     self.console.warn("Unknown blockchain provider %s" % source)
             except:
                 self.console.error("Error getting highest block from source %s" % source)
+        if len(highest) == 0:
+            self.console.error("Do not have a highest block from sources.")
+            return (0, 'failure')
         best = max(highest)
         provider = providers[highest.index(best)]
         return (best, provider)
