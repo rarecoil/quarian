@@ -104,7 +104,7 @@ def index():
     return jsonify({ 'success': True })
 
 
-@app.route('/restart', methods=['GET', 'POST'])
+@app.route('/restart', methods=['GET'])
 def restart():
     """Restarts the geth instance."""
     global auth_type

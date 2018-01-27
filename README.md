@@ -10,8 +10,8 @@ on my Geth nodes for [EGS Singapore](//gasstation-legacy.etheria.io/).
 Features:
 
 * **Remote node monitoring via JSON-RPC**: Can monitor remote nodes and issue
-  HTTP requests to servers to cause geth restarts, if you have tooling on that
-  side to restart geth
+  HTTP requests to servers to cause geth restarts. Use the `http-restarter` on
+  your Geth client side to easily restart them with the correct command.
 * **Easy to read logs**: Nice easy UTF-8 + color logging output to stdout
 * **Multiple canonical sources for chain tip**: Supports Etherscan, Etherchain, Infura, and your own geth nodes
 * **Modular checks**: Checks are easy to write classes. Turn on and off specific checks.

@@ -35,6 +35,8 @@ class Quarian(object):
     etherscan_api_key = "PUT_YOUR_API_KEY_HERE"
     restart_command = "supervisorctl restart geth"
     restart_command_type = "shell"
+    restart_http_auth_token = None
+    restart_http_tls_client_cert = None
     nodelist = ["http://localhost:8545/"]
     checklist = ['cron']
     allow_trailing_syncing = 500
@@ -206,12 +208,28 @@ class Quarian(object):
             return True
 
         elif self.restart_command_type == 'http':
-            cmd = self.restart_command.replace("$NODE_URL", urllib.quote(uri))
-            self.console.debug("Executing GET to NODE_URL %s" % self.restart_command)
+            self.console.debug("Executing GET to HTTP endpoint" % self.restart_command)
             try:
-                res = requests.get(self.restart_command,
-                    headers = { 'user-agent': self.user_agent },
-                    timeout=5)
+                headers = { 'user-agent': self.user_agent }
+                if self.restart_http_auth_token:
+                    self.console.debug("Bearer token specified, adding to HTTP header.")
+                    headers['authorization'] = "Bearer %s" % self.restart_http_auth_token
+
+                if self.restart_http_tls_client_cert:
+                    self.console.debug("TLS client certificate specified.")
+                    if not os.path.isfile(self.restart_http_tls_client_cert):
+                        self.console.error("Client cert %s specified but is not a file. " + \
+                            "Failing to issue restart." % self.restart_http_tls_client_cert)
+                        return False
+                    else:
+                        res = requests.get(self.restart_command,
+                            headers=headers,
+                            cert=self.restart_http_tls_client_cert,
+                            timeout=5)
+                else:
+                    res = requests.get(self.restart_command,
+                        headers=headers,
+                        timeout=5)
                 if res.status_code == 200:
                     return True
                 else:
@@ -296,6 +314,8 @@ class Quarian(object):
             'etherscan_api_key',
             'restart_command',
             'restart_command_type',
+            'restart_http_auth_token',
+            'restart_http_tls_client_cert',
             'nodelist',
             'get_highest_from',
             'ignore_firstrun_node',
