@@ -102,3 +102,4 @@ ENV/
 
 settings.dev.conf
 .vscode
+http-venv/
