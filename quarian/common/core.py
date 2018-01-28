@@ -58,7 +58,6 @@ class Quarian(object):
 
         self._load_settings(args.settings_file)
         self._load_checks()
-        print(self.check_instances)
 
         self.console.info("Quarian started.")
         self.web3 = web3.Web3(web3.HTTPProvider(self.reference_node))
