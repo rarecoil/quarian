@@ -58,6 +58,7 @@ class Quarian(object):
 
         self._load_settings(args.settings_file)
         self._load_checks()
+        print(self.check_instances)
 
         self.console.info("Quarian started.")
         self.web3 = web3.Web3(web3.HTTPProvider(self.reference_node))
@@ -264,7 +265,8 @@ class Quarian(object):
                         class_name = result.groups()[0]
                         self.console.debug("Found class name %s in %s" % (class_name, filepath))
                         instance = self._instantiate_from_filepath(filepath, class_name)
-                        self.check_instances[class_name] = instance
+                        name_str = os.path.basename(filepath).replace('.py', '')
+                        self.check_instances[name_str] = instance
 
 
     def _instantiate_from_filepath(self, filepath, className):
