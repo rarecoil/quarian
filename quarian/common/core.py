@@ -45,6 +45,7 @@ class Quarian(object):
     ignore_firstrun_node = True
     get_highest_from = 'etherscan'
 
+    check_instances = {}
     check_options = {}
     global_options = {}
 
@@ -64,9 +65,10 @@ class Quarian(object):
 
     def check(self, uri):
         """Check on Geth, and restart."""
-        for check in self.checklist:
-            check.set_geth_instance(uri)
-            res = check.check(uri)
+        for check_name in self.checklist:
+            check_instance = self.check_instances[check_name]
+            check_instance.set_geth_instance(uri)
+            res = check_instance.check(uri)
             if res == True:
                 self._restart_geth(uri)
             else:
@@ -262,9 +264,7 @@ class Quarian(object):
                         class_name = result.groups()[0]
                         self.console.debug("Found class name %s in %s" % (class_name, filepath))
                         instance = self._instantiate_from_filepath(filepath, class_name)
-                        check_class_list.append(instance)
-        # instantiate class instances
-        self.checklist = check_class_list
+                        self.check_instances[class_name] = instance
 
 
     def _instantiate_from_filepath(self, filepath, className):

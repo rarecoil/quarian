@@ -24,6 +24,7 @@ class CheckTimer(CheckBase):
         """Returns a Boolean on whether or not Quarian should restart Geth."""
         now = time.time()
         if (now - self.last_restart) >= self.restart_every_sec:
+            self.last_restart = now
             return True
         else:
             return False
