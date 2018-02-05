@@ -68,11 +68,17 @@ class Quarian(object):
         for check_name in self.checklist:
             check_instance = self.check_instances[check_name]
             check_instance.set_geth_instance(uri)
-            res = check_instance.check(uri)
-            if res == True:
-                self._restart_geth(uri)
-            else:
-                continue
+            try:
+                res = check_instance.check(uri)
+                if res is True:
+                    self._restart_geth(uri)
+                else:
+                    continue
+            except:
+                # silence every error
+                # this way unintended failures don't kill the watchdog
+                # raise them in logs as bugs instead
+                self.console.error("Check %s failed!" % check_name)
 
 
     def check_every(self, sec=None):
