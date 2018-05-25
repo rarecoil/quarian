@@ -4,8 +4,7 @@
 [Quarian](http://masseffect.wikia.com/wiki/Quarian) is a controller meant to
 shepherd Geth instances that are not performing properly, and alert/report on
 problems with a Geth instance. If Geth is not running properly, it will
-restart Geth with a command of your choosing. Quarian is currently being tested
-on my Geth nodes for [EGS Singapore](//gasstation-legacy.etheria.io/).
+restart Geth with a command of your choosing.
 
 Features:
 
