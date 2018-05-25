@@ -70,12 +70,3 @@ class Output(object):
                 skip = False
             line = "                           " + line
         return "\n".join(lines)
-
-    def banner(self):
-        """stupid easter eggs are fun"""
-        print ("""      __  __                     __       __  _         
- ___ / /_/ /  ___ ____ ____ ___ / /____ _/ /_(_)__  ___ 
-/ -_) __/ _ \/ _ `/ _ `(_-<(_-</ __/ _ `/ __/ / _ \/ _ \\
-\__/\__/_//_/\_, /\_,_/___/___/\__/\_,_/\__/_/\___/_//_/
-            /___/                                       
-""")
