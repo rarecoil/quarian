@@ -31,6 +31,7 @@ class CheckPeerCount(CheckBase):
         """Returns a Boolean on whether or not Quarian should restart Geth."""
         num_peers = self.web3_geth.net.peerCount
         now = time.time()
+        self.console.debug("peerCount: Peer count %d, (%s)" % (num_peers, uri))
         if self.last_check is not None:
             if num_peers < self.min_peer_count and (now + self.grace_period > self.last_check):
                 self.console.warn("✘  Node is below minimum peer count %d, attempting restart (%s)" % (self.min_peer_count, uri))
