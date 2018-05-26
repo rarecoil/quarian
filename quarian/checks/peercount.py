@@ -24,7 +24,7 @@ class CheckPeerCount(CheckBase):
 
     def __init__(self, global_options, check_options, core):
         super().__init__(global_options, check_options, core)
-        self.min_peer_count = int(self.check_options['restart_every_sec'])
+        self.min_peer_count = int(self.check_options['min_peer_count'])
         self.grace_period = int(self.check_options['grace_period'])
 
     def check(self, uri):
