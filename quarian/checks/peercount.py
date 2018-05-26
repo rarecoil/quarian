@@ -34,6 +34,7 @@ class CheckPeerCount(CheckBase):
         self.console.debug("Node has peer count %d, minimum %d (%s)" % (num_peers, self.min_peer_count, uri))
         if self.last_check is not None:
             if num_peers < self.min_peer_count and (now + self.grace_period > self.last_check):
+                self.last_check = now
                 self.console.warn("✘  Node is below minimum peer count %d, attempting restart (%s)" % (self.min_peer_count, uri))
                 return True
         else:
