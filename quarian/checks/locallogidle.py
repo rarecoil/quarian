@@ -67,6 +67,7 @@ class CheckLocalLogIdle(CheckBase):
 
 
     def _get_last_log_entry_timestamp(self):
+        """Get a UNIX-style integer timestamp for the last log entry geth has made."""
         # https://stackoverflow.com/questions/3346430/what-is-the-most-efficient-way-to-get-first-and-last-line-of-a-text-file
         with open(self.geth_log_location, "rb") as f:
             f.readline() 
