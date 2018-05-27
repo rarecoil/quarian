@@ -1,5 +1,5 @@
 """
-    cron.py
+    timer.py
     Simply fires a restart once enough Quarian uptime has passed.
 """
 
