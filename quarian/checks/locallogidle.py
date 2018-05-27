@@ -55,7 +55,7 @@ class CheckLocalLogIdle(CheckBase):
         last_log_time = self._get_last_log_entry_timestamp()
         if self.last_check is not None:
             timedelta = now - last_log_time
-            if (now + self.grace_period > self.last_check) and timedelta > self.allow_idle_sec:
+            if (now > self.last_check + self.grace_period) and timedelta > self.allow_idle_sec:
                 self.console.warn("✘  Node is stalled by %d seconds, attempting restart (%s)" % (timedelta, uri))
                 self.last_check = now
                 return True
