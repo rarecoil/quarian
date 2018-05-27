@@ -23,7 +23,6 @@ import os
 import re
 from .base import CheckBase
 
-
 class CheckLocalLogIdle(CheckBase):
 
     web3_reference = None
