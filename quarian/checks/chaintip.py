@@ -97,9 +97,6 @@ class CheckChainTip(CheckBase):
     def _issue_restart(self, blockdelta=None):
         """Issue a restart, but only if the time is not within the grace period."""
         now = time.time()
-        if self.last_restart is None:
-            self.last_restart = now
-            return True
 
         if self.restart_grace_period_strategy == 'fixed':
             delta = (now - self.last_restart)
