@@ -120,8 +120,9 @@ class CheckChainTip(CheckBase):
                         time.strftime('%Y-%m-%d %H:%M:%S',
                             time.localtime(self.adaptive_grace_period_target)))
             if now >= self.adaptive_grace_period_target:
-                self.console.debug("Time has not yet reached adaptive grace period, ignoring.")
+                self.console.debug("Node is still failing after grace period exceeded.")
                 self.last_restart = time.time()
+                self.adaptive_grace_period_target = None
                 return True
         return False
 
